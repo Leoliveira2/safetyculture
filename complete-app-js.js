@@ -1,891 +1,718 @@
-            <div className={`relative ${dominantLevel === 'calculative' ? 'ring-4 ring-yellow-400' : ''}`}>
-              <div className="bg-orange-500 p-4 rounded-lg relative">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h4 className="text-lg font-bold text-white">CALCULATIVO</h4>
-                    <p className="text-sm text-orange-100 italic">Nós temos sistemas para gerenciar todos os perigos</p>
-                    <p className="text-xs text-orange-100 mt-1">Nós temos sistemas para gerenciar todos os perigos que conseguimos pensar</p>
-                  </div>
-                  <div className="text-3xl font-bold text-white ml-4">{scores.calculative}</div>
-                </div>
-                {dominantLevel === 'calculative' && (
-                  <div className="absolute -right-12 top-1/2 transform -translate-y-1/2">
-                    <div className="bg-yellow-400 text-black px-3 py-1 rounded-r-lg text-sm font-bold whitespace-nowrap">
-                      SUA CULTURA
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 
-            {/* Reativo */}
-            <div className={`relative ${dominantLevel === 'reactive' ? 'ring-4 ring-yellow-400' : ''}`}>
-              <div className="bg-red-600 p-4 rounded-lg relative">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h4 className="text-lg font-bold text-white">REATIVO</h4>
-                    <p className="text-sm text-red-100 italic">Quem está me vigiando?</p>
-                    <p className="text-xs text-red-100 mt-1">Fazemos muito pouco até que ocorram acidentes, sendo então que tomamos medidas</p>
-                  </div>
-                  <div className="text-3xl font-bold text-white ml-4">{scores.reactive}</div>
-                </div>
-                {dominantLevel === 'reactive' && (
-                  <div className="absolute -right-12 top-1/2 transform -translate-y-1/2">
-                    <div className="bg-yellow-400 text-black px-3 py-1 rounded-r-lg text-sm font-bold whitespace-nowrap">
-                      SUA CULTURA
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 
-          {/* Pathological level indicator - exactly like original */}
-          <div className="text-center mt-6 border-t border-gray-600 pt-4">
-            <div className="text-gray-400 text-sm">
-              <span className="font-bold">PATOLÓGICO</span><br/>
-              <span className="text-xs">Quem se importa, desde que não sejamos pegos</span>
-            </div>
-          </div>
+// Ícones personalizados para cada tipo de risco com cores específicas
+const RiskIcons = {
+  eletricidade: ({ size = 'w-6 h-6' } = {}) => (
+    <svg viewBox="0 0 24 24" className={size}>
+      <defs>
+        <linearGradient id="electricGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FCD34D" />
+          <stop offset="100%" stopColor="#F59E0B" />
+        </linearGradient>
+      </defs>
+      <path d="M13 3L8 14h3l-2 7 7-10h-3l2-8z" fill="url(#electricGrad)" stroke="#D97706" strokeWidth="0.5"/>
+      <circle cx="6" cy="6" r="1.5" fill="#EF4444" opacity="0.8"/>
+      <circle cx="18" cy="8" r="1" fill="#EF4444" opacity="0.6"/>
+    </svg>
+  ),
+  espacoConfinado: ({ size = 'w-6 h-6' } = {}) => (
+    <svg viewBox="0 0 24 24" className={size}>
+      <defs>
+        <linearGradient id="confinedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#6B7280" />
+          <stop offset="100%" stopColor="#374151" />
+        </linearGradient>
+      </defs>
+      <rect x="4" y="8" width="16" height="12" rx="2" fill="url(#confinedGrad)" stroke="#1F2937" strokeWidth="1"/>
+      <circle cx="12" cy="6" r="1.5" fill="#3B82F6"/>
+      <rect x="11" y="7" width="2" height="4" fill="#3B82F6"/>
+      <rect x="10" y="9" width="1.5" height="2" fill="#3B82F6"/>
+      <rect x="12.5" y="9" width="1.5" height="2" fill="#3B82F6"/>
+      <rect x="10" y="8" width="4" height="2" fill="#60A5FA" opacity="0.7"/>
+      <circle cx="18" cy="10" r="1" fill="#EF4444"/>
+    </svg>
+  ),
+  maquinas: ({ size = 'w-6 h-6' } = {}) => (
+    <svg viewBox="0 0 24 24" className={size}>
+      <defs>
+        <linearGradient id="machineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8B5CF6" />
+          <stop offset="100%" stopColor="#7C3AED" />
+        </linearGradient>
+      </defs>
+      <rect x="3" y="14" width="18" height="6" rx="1" fill="url(#machineGrad)" stroke="#6D28D9" strokeWidth="0.5"/>
+      <circle cx="8" cy="10" r="3" fill="none" stroke="#8B5CF6" strokeWidth="2"/>
+      <circle cx="16" cy="10" r="3" fill="none" stroke="#8B5CF6" strokeWidth="2"/>
+      <path d="M8 7l1 1-1 1-1-1z M8 11l1 1-1 1-1-1z M6 10l1-1 1 1-1 1z M10 10l1-1 1 1-1 1z" fill="#8B5CF6"/>
+      <path d="M16 7l1 1-1 1-1-1z M16 11l1 1-1 1-1-1z M14 10l1-1 1 1-1 1z M18 10l1-1 1 1-1 1z" fill="#8B5CF6"/>
+      <rect x="6" y="4" width="12" height="2" rx="1" fill="#EF4444" opacity="0.8"/>
+    </svg>
+  ),
+  quimicos: ({ size = 'w-6 h-6' } = {}) => (
+    <svg viewBox="0 0 24 24" className={size}>
+      <defs>
+        <linearGradient id="chemicalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#10B981" />
+          <stop offset="100%" stopColor="#059669" />
+        </linearGradient>
+      </defs>
+      <path d="M9 3v4l-2 4v8c0 1 1 2 2 2h6c1 0 2-1 2-2v-8l-2-4V3H9z" fill="url(#chemicalGrad)" stroke="#047857" strokeWidth="0.5"/>
+      <path d="M7 11v6c0 1 1 2 2 2h6c1 0 2-1 2-2v-6l-2-4H9l-2 4z" fill="#34D399" opacity="0.7"/>
+      <circle cx="10" cy="5" r="0.5" fill="#6B7280" opacity="0.6"/>
+      <circle cx="12" cy="4" r="0.5" fill="#6B7280" opacity="0.4"/>
+      <circle cx="14" cy="5" r="0.5" fill="#6B7280" opacity="0.6"/>
+      <circle cx="18" cy="6" r="1.5" fill="#EF4444"/>
+      <path d="M17.5 5.5h1v1h-1z" fill="white"/>
+    </svg>
+  ),
+  altura: ({ size = 'w-6 h-6' } = {}) => (
+    <svg viewBox="0 0 24 24" className={size}>
+      <defs>
+        <linearGradient id="heightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#3B82F6" />
+          <stop offset="100%" stopColor="#1D4ED8" />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="18" width="20" height="2" fill="#6B7280"/>
+      <rect x="4" y="8" width="1" height="10" fill="#6B7280"/>
+      <rect x="19" y="8" width="1" height="10" fill="#6B7280"/>
+      <circle cx="12" cy="6" r="1.5" fill="#F59E0B"/>
+      <rect x="11" y="7" width="2" height="3" fill="url(#heightGrad)"/>
+      <rect x="10.5" y="9" width="1" height="2" fill="url(#heightGrad)"/>
+      <rect x="12.5" y="9" width="1" height="2" fill="url(#heightGrad)"/>
+      <ellipse cx="12" cy="5.5" rx="1.5" ry="1" fill="#F59E0B"/>
+      <path d="M10.5 8h3v0.5h-3z" fill="#DC2626"/>
+      <path d="M11.5 8.5v2h1v-2z" fill="#DC2626"/>
+      <path d="M12 10.5C12 12 14 14 16 16" stroke="#DC2626" strokeWidth="1" fill="none"/>
+      <circle cx="16" cy="16" r="1" fill="#DC2626"/>
+    </svg>
+  ),
+  incendio: ({ size = 'w-6 h-6' } = {}) => (
+    <svg viewBox="0 0 24 24" className={size}>
+      <defs>
+        <linearGradient id="fireGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FEF3C7" />
+          <stop offset="50%" stopColor="#F59E0B" />
+          <stop offset="100%" stopColor="#DC2626" />
+        </linearGradient>
+      </defs>
+      <path d="M12 2c1.5 6 6 8 6 12 0 3.3-2.7 6-6 6s-6-2.7-6-6c0-4 4.5-6 6-12z" fill="url(#fireGrad)"/>
+      <path d="M12 6c1 4 4 5 4 8 0 2.2-1.8 4-4 4s-4-1.8-4-4c0-3 3-4 4-8z" fill="#FCD34D"/>
+      <rect x="18" y="12" width="2" height="6" rx="1" fill="#DC2626"/>
+      <rect x="17.5" y="10" width="3" height="2" rx="0.5" fill="#374151"/>
+      <circle cx="19" cy="11" r="0.5" fill="#6B7280"/>
+    </svg>
+  )
+};
 
-          {/* Results summary */}
-          <div className="mt-8 text-center relative z-10">
-            <div className="inline-block px-8 py-4 rounded-xl font-bold text-xl bg-yellow-400 text-black">
-              Cultura Dominante: {dominantLevel.toUpperCase()}
-            </div>
-            <div className="mt-2 text-sm text-gray-300">
-              {Object.values(heartsAnswers).filter(a => a === 'na').length > 0 && (
-                <p>* {Object.values(heartsAnswers).filter(a => a === 'na').length} questões marcadas como Não Aplicável foram excluídas da pontuação</p>
-              )}
-            </div>
-          </div>
-        </div>
+const RiskManagementApp = () => {
+  const [activeTab, setActiveTab] = useState('checklist');
+  const [expandedSections, setExpandedSections] = useState({});
+  const [checklistData, setChecklistData] = useState({
+    eletricidade: {
+      items: [
+        { id: 1, text: 'Verificar isolamento elétrico de todos os equipamentos', status: '' },
+        { id: 2, text: 'Confirmar desligamento e bloqueio da energia (LOTO)', status: '' },
+        { id: 3, text: 'Usar EPIs adequados (luvas isolantes, capacete, óculos)', status: '' },
+        { id: 4, text: 'Testar ausência de tensão com equipamento calibrado', status: '' },
+        { id: 5, text: 'Instalar aterramento temporário quando necessário', status: '' },
+        { id: 6, text: 'Verificar condições climáticas (umidade, chuva)', status: '' },
+        { id: 7, text: 'Manter distância de segurança de partes energizadas', status: '' },
+        { id: 8, text: 'Ter equipamento de emergência próximo (extintor CO2)', status: '' }
+      ]
+    },
+    espacoConfinado: {
+      items: [
+        { id: 9, text: 'Autorização de entrada válida e assinada', status: '' },
+        { id: 10, text: 'Monitoramento contínuo de gases (O2, H2S, LEL, CO)', status: '' },
+        { id: 11, text: 'Sistema de ventilação forçada em funcionamento', status: '' },
+        { id: 12, text: 'Vigias treinados posicionados do lado externo', status: '' },
+        { id: 13, text: 'Equipamento de resgate e comunicação disponível', status: '' },
+        { id: 14, text: 'Isolamento de energias perigosas', status: '' },
+        { id: 15, text: 'Iluminação adequada e à prova de explosão', status: '' },
+        { id: 16, text: 'Procedimento de emergência definido e conhecido', status: '' },
+        { id: 17, text: 'Tripé de resgate e cabo de segurança instalados', status: '' }
+      ]
+    },
+    maquinas: {
+      items: [
+        { id: 18, text: 'Máquina bloqueada e etiquetada (LOTO)', status: '' },
+        { id: 19, text: 'Proteções e dispositivos de segurança instalados', status: '' },
+        { id: 20, text: 'Treinamento específico na máquina realizado', status: '' },
+        { id: 21, text: 'Procedimento operacional conhecido e seguido', status: '' },
+        { id: 22, text: 'Área de trabalho sinalizada e isolada', status: '' },
+        { id: 23, text: 'Verificar funcionamento de botões de emergência', status: '' },
+        { id: 24, text: 'Inspeção de cabos, correias e componentes móveis', status: '' },
+        { id: 25, text: 'Ferramentas adequadas e em bom estado', status: '' },
+        { id: 26, text: 'Verificar pressão de sistemas pneumáticos/hidráulicos', status: '' }
+      ]
+    },
+    quimicos: {
+      items: [
+        { id: 27, text: 'FISPQ consultada e compreendida', status: '' },
+        { id: 28, text: 'EPIs específicos utilizados (respirador, luvas químicas)', status: '' },
+        { id: 29, text: 'Área com ventilação adequada', status: '' },
+        { id: 30, text: 'Kit de emergência química disponível', status: '' },
+        { id: 31, text: 'Chuveiro e lava-olhos próximos e funcionando', status: '' },
+        { id: 32, text: 'Produtos incompatíveis separados adequadamente', status: '' },
+        { id: 33, text: 'Contenções secundárias instaladas', status: '' },
+        { id: 34, text: 'Sinalização de riscos químicos visível', status: '' },
+        { id: 35, text: 'Medidor de gases/vapores calibrado disponível', status: '' },
+        { id: 36, text: 'Procedimento de descarte definido', status: '' }
+      ]
+    },
+    altura: {
+      items: [
+        { id: 37, text: 'Análise preliminar de risco (APR) elaborada', status: '' },
+        { id: 38, text: 'Sistema de proteção contra quedas instalado', status: '' },
+        { id: 39, text: 'Treinamento NR-35 válido (menos de 2 anos)', status: '' },
+        { id: 40, text: 'Condições climáticas favoráveis (vento < 40 km/h)', status: '' },
+        { id: 41, text: 'Cinto de segurança tipo paraquedista verificado', status: '' },
+        { id: 42, text: 'Pontos de ancoragem certificados e inspecionados', status: '' },
+        { id: 43, text: 'Linha de vida ou trava-quedas em uso', status: '' },
+        { id: 44, text: 'Andaimes inspecionados e liberados', status: '' },
+        { id: 45, text: 'Área inferior isolada e sinalizada', status: '' },
+        { id: 46, text: 'Plano de resgate elaborado e conhecido', status: '' }
+      ]
+    },
+    incendio: {
+      items: [
+        { id: 47, text: 'Extintores adequados verificados e dentro da validade', status: '' },
+        { id: 48, text: 'Rotas de fuga desobstruídas e sinalizadas', status: '' },
+        { id: 49, text: 'Sistema de alarme testado e funcionando', status: '' },
+        { id: 50, text: 'Materiais inflamáveis controlados e segregados', status: '' },
+        { id: 51, text: 'Permissão de trabalho a quente válida', status: '' },
+        { id: 52, text: 'Hidrantes próximos testados e acessíveis', status: '' },
+        { id: 53, text: 'Equipamentos elétricos à prova de explosão', status: '' },
+        { id: 54, text: 'Vigia contra incêndio posicionado', status: '' },
+        { id: 55, text: 'Procedimento de emergência conhecido', status: '' },
+        { id: 56, text: 'Comunicação com brigada de incêndio estabelecida', status: '' }
+      ]
+    }
+  });
 
-        {/* Recommendations */}
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg">
-            <h4 className="font-bold text-lg mb-3 text-gray-800">Características da Cultura Atual:</h4>
-            {dominantLevel === 'reactive' && (
-              <div>
-                <p className="mb-2"><strong>Estágio Reativo:</strong> A segurança é impulsionada pela evitação de acidentes e conformidade regulatória.</p>
-                <p><strong>Próximos Passos:</strong> Desenvolver consciência sobre segurança, estabelecer sistemas básicos de gestão e construir comprometimento da liderança.</p>
-              </div>
-            )}
-            {dominantLevel === 'calculative' && (
-              <div>
-                <p className="mb-2"><strong>Estágio Calculativo:</strong> Decisões de segurança baseadas em análise de custo-benefício e sistemas estruturados.</p>
-                <p><strong>Próximos Passos:</strong> Trabalhar no desenvolvimento de motivação intrínseca para segurança e valores compartilhados.</p>
-              </div>
-            )}
-            {dominantLevel === 'proactive' && (
-              <div>
-                <p className="mb-2"><strong>Estágio Proativo:</strong> As pessoas acreditam em fazer a coisa certa por segurança, guiadas por valores.</p>
-                <p><strong>Próximos Passos:</strong> Continuar construindo sobre estes valores positivos e integrar segurança em todos os processos.</p>
-              </div>
-            )}
-            {dominantLevel === 'generative' && (
-              <div>
-                <p className="mb-2"><strong>Estágio Generativo:</strong> A segurança é integral à forma como vocês fazem negócios.</p>
-                <p><strong>Próximos Passos:</strong> Manter esta excelência e compartilhar aprendizados com outros na indústria.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
+  const riskLabels = {
+    eletricidade: 'Eletricidade',
+    espacoConfinado: 'Espaço Confinado',
+    maquinas: 'Máquinas',
+    quimicos: 'Químicos',
+    altura: 'Trabalho em Altura',
+    incendio: 'Incêndio'
   };
 
-  const renderMaturityResults = () => {
-    const score = calculateMaturityScore();
-    const level = getMaturityLevel(score);
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const handleStatusChange = (riskType, itemId, newStatus) => {
+    setChecklistData(prev => ({
+      ...prev,
+      [riskType]: {
+        ...prev[riskType],
+        items: prev[riskType].items.map(item =>
+          item.id === itemId ? { ...item, status: newStatus } : item
+        )
+      }
+    }));
+  };
+
+  const getCompletionPercentage = (riskType) => {
+    const items = checklistData[riskType].items;
+    const totalItems = items.length;
+    const simItems = items.filter(item => item.status === 'sim').length;
+    const parcialItems = items.filter(item => item.status === 'parcial').length;
+    const naItems = items.filter(item => item.status === 'na').length;
     
-    return (
-      <div className="space-y-6">
-        <h3 className="text-2xl font-bold text-center mb-6">Safety Culture Maturity Results</h3>
-        
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <div className="text-center mb-4">
-            <div className={`inline-block px-6 py-3 rounded-full text-white font-bold ${level.color}`}>
-              {level.level}
-            </div>
-            <p className="text-lg mt-2">Maturity Score: {score.toFixed(1)}%</p>
-            <div className="mt-2 text-sm text-gray-600">
-              {Object.values(maturityAnswers).filter(a => a === 'na').length > 0 && (
-                <p>* {Object.values(maturityAnswers).filter(a => a === 'na').length} questions marked as Not Applicable were excluded from scoring</p>
-              )}
-            </div>
-          </div>
-          
-          <div className="w-full bg-gray-200 rounded-full h-4 mb-6">
-            <div 
-              className={`h-4 rounded-full ${level.color}`}
-              style={{ width: `${score}%` }}
-            />
-          </div>
-          
-          <div className="grid grid-cols-5 gap-2 text-xs text-center mb-6">
-            <div className="bg-red-500 text-white p-2 rounded">Pathological</div>
-            <div className="bg-orange-500 text-white p-2 rounded">Emerging</div>
-            <div className="bg-yellow-500 text-white p-2 rounded">Developing</div>
-            <div className="bg-blue-500 text-white p-2 rounded">Managing</div>
-            <div className="bg-green-600 text-white p-2 rounded">Improving</div>
-          </div>
-          
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-bold mb-2">Next Steps:</h4>
-            {score < 20 && (
-              <p>Establish basic safety management systems and leadership commitment. Focus on fundamental safety practices.</p>
-            )}
-            {score >= 20 && score < 40 && (
-              <p>Develop systematic approaches to safety management. Improve training and communication systems.</p>
-            )}
-            {score >= 40 && score < 60 && (
-              <p>Enhance employee engagement and participation. Implement more proactive safety measures.</p>
-            )}
-            {score >= 60 && score < 80 && (
-              <p>Focus on integration and consistency across all operations. Develop advanced safety leadership capabilities.</p>
-            )}
-            {score >= 80 && (
-              <p>Maintain excellence through continuous innovation and learning. Share best practices with industry peers.</p>
-            )}
-          </div>
-        </div>
-      </div>
-    );
+    // Calcula pontuação: Sim = 100%, Parcial = 50%, NA = 100%, Não = 0%
+    const score = (simItems * 100) + (parcialItems * 50) + (naItems * 100);
+    const maxScore = totalItems * 100;
+    
+    return Math.round((score / maxScore) * 100);
   };
 
-  const renderAssessment = (questions, answers, methodology, title) => {
-    const totalQuestions = questions.length;
-    const answeredCount = Object.keys(answers).length;
-    const showResults = answeredCount === totalQuestions;
+  const getInsights = (riskType) => {
+    const items = checklistData[riskType].items;
+    const problemItems = items.filter(item => item.status === 'nao' || item.status === 'parcial');
+    
+    const insights = {
+      eletricidade: {
+        'Verificar isolamento elétrico de todos os equipamentos': 'Contrate um eletricista qualificado para inspeção.',
+        'Confirmar desligamento e bloqueio da energia (LOTO)': 'Implemente procedimento LOTO com cadeados específicos.',
+        'Usar EPIs adequados (luvas isolantes, capacete, óculos)': 'Forneça EPIs certificados e treine a equipe.',
+        'Testar ausência de tensão com equipamento calibrado': 'Adquira detector de tensão certificado.',
+        'Instalar aterramento temporário quando necessário': 'Tenha kit de aterramento portátil disponível.',
+        'Verificar condições climáticas (umidade, chuva)': 'Use higrômetro e suspenda trabalhos se umidade acima de 95%.',
+        'Manter distância de segurança de partes energizadas': 'Demarque zonas de risco com barreiras físicas.',
+        'Ter equipamento de emergência próximo (extintor CO2)': 'Instale extintor classe C próximo ao trabalho.'
+      },
+      espacoConfinado: {
+        'Autorização de entrada válida e assinada': 'Crie formulário padrão com supervisor capacitado.',
+        'Monitoramento contínuo de gases (O2, H2S, LEL, CO)': 'Adquira detector multigás calibrado.',
+        'Sistema de ventilação forçada em funcionamento': 'Instale exaustores e verifique fluxo de ar.',
+        'Vigias treinados posicionados do lado externo': 'Treine vigias em NR-33.',
+        'Equipamento de resgate e comunicação disponível': 'Tenha rádios e equipos de resgate próximos.',
+        'Isolamento de energias perigosas': 'Implemente LOTO para todos os sistemas.',
+        'Iluminação adequada e à prova de explosão': 'Use luminárias certificadas com mínimo 500 lux.',
+        'Procedimento de emergência definido e conhecido': 'Elabore plano de resgate e treine equipe.',
+        'Tripé de resgate e cabo de segurança instalados': 'Adquira tripé certificado e teste antes do uso.'
+      },
+      maquinas: {
+        'Máquina bloqueada e etiquetada (LOTO)': 'Implemente sistema LOTO específico para cada máquina.',
+        'Proteções e dispositivos de segurança instalados': 'Instale grades e cortinas de luz.',
+        'Treinamento específico na máquina realizado': 'Documente treinamentos e renove periodicamente.',
+        'Procedimento operacional conhecido e seguido': 'Crie manual operacional ilustrado.',
+        'Área de trabalho sinalizada e isolada': 'Use cones, fitas e placas de sinalização.',
+        'Verificar funcionamento de botões de emergência': 'Teste botões semanalmente.',
+        'Inspeção de cabos, correias e componentes móveis': 'Crie checklist e substitua itens desgastados.',
+        'Ferramentas adequadas e em bom estado': 'Mantenha inventário atualizado.',
+        'Verificar pressão de sistemas pneumáticos/hidráulicos': 'Use manômetros calibrados.'
+      },
+      quimicos: {
+        'FISPQ consultada e compreendida': 'Mantenha FISPQs atualizadas e acessíveis.',
+        'EPIs específicos utilizados (respirador, luvas químicas)': 'Forneça EPIs adequados ao produto químico.',
+        'Área com ventilação adequada': 'Instale sistema de exaustão localizada.',
+        'Kit de emergência química disponível': 'Tenha material absorvente e neutralizantes.',
+        'Chuveiro e lava-olhos próximos e funcionando': 'Instale a máximo 15 metros e teste semanalmente.',
+        'Produtos incompatíveis separados adequadamente': 'Use tabela de incompatibilidade.',
+        'Contenções secundárias instaladas': 'Instale bandejas coletoras.',
+        'Sinalização de riscos químicos visível': 'Use pictogramas GHS.',
+        'Medidor de gases/vapores calibrado disponível': 'Adquira detector específico.',
+        'Procedimento de descarte definido': 'Contrate empresa licenciada.'
+      },
+      altura: {
+        'Análise preliminar de risco (APR) elaborada': 'Elabore APR específica para cada trabalho.',
+        'Sistema de proteção contra quedas instalado': 'Instale linhas de vida certificadas.',
+        'Treinamento NR-35 válido (menos de 2 anos)': 'Contrate instrutor certificado.',
+        'Condições climáticas favoráveis (vento < 40 km/h)': 'Use anemômetro para medir vento.',
+        'Cinto de segurança tipo paraquedista verificado': 'Inspecione costuras e fivelas.',
+        'Pontos de ancoragem certificados e inspecionados': 'Contrate engenheiro para certificação.',
+        'Linha de vida ou trava-quedas em uso': 'Adquira equipamentos certificados.',
+        'Andaimes inspecionados e liberados': 'Contrate profissional qualificado.',
+        'Área inferior isolada e sinalizada': 'Demarque perímetro de segurança.',
+        'Plano de resgate elaborado e conhecido': 'Elabore procedimento específico.'
+      },
+      incendio: {
+        'Extintores adequados verificados e dentro da validade': 'Inspecione extintores mensalmente.',
+        'Rotas de fuga desobstruídas e sinalizadas': 'Mantenha corredores livres.',
+        'Sistema de alarme testado e funcionando': 'Teste alarmes mensalmente.',
+        'Materiais inflamáveis controlados e segregados': 'Use armários corta-fogo.',
+        'Permissão de trabalho a quente válida': 'Elabore permissão específica.',
+        'Hidrantes próximos testados e acessíveis': 'Teste pressão e vazão.',
+        'Equipamentos elétricos à prova de explosão': 'Use equipamentos certificados.',
+        'Vigia contra incêndio posicionado': 'Designe pessoa treinada.',
+        'Procedimento de emergência conhecido': 'Treine brigada de incêndio.',
+        'Comunicação com brigada de incêndio estabelecida': 'Mantenha rádios funcionando.'
+      }
+    };
+    
+    return problemItems.map(item => ({
+      problem: item.text,
+      status: item.status,
+      solution: insights[riskType][item.text] || 'Consulte especialista para orientações específicas.'
+    }));
+  };
 
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4 mb-6">
-          <button 
-            onClick={() => setCurrentScreen('home')}
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+  const getAllInsights = () => {
+    const allInsights = [];
+    Object.keys(checklistData).forEach(riskType => {
+      const riskInsights = getInsights(riskType);
+      if (riskInsights.length > 0) {
+        allInsights.push({
+          risk: riskType,
+          label: riskLabels[riskType],
+          insights: riskInsights
+        });
+      }
+    });
+    return allInsights;
+  };
+
+  const RadarChart = () => {
+    const risks = Object.keys(checklistData);
+    const center = 140;
+    const maxRadius = 100;
+    
+    const angleStep = (2 * Math.PI) / risks.length;
+    
+    const getPoint = (angle, radius) => ({
+      x: center + radius * Math.cos(angle - Math.PI / 2),
+      y: center + radius * Math.sin(angle - Math.PI / 2)
+    });
+
+    const gridLines = [20, 40, 60, 80, 100].map(percentage => {
+      const radius = (percentage / 100) * maxRadius;
+      const points = risks.map((_, index) => {
+        const angle = index * angleStep;
+        return getPoint(angle, radius);
+      });
+      
+      return (
+        <polygon
+          key={percentage}
+          points={points.map(p => `${p.x},${p.y}`).join(' ')}
+          fill="none"
+          stroke="#e5e7eb"
+          strokeWidth="1"
+        />
+      );
+    });
+
+    const dataPoints = risks.map((risk, index) => {
+      const angle = index * angleStep;
+      const percentage = getCompletionPercentage(risk);
+      const radius = (percentage / 100) * maxRadius;
+      return getPoint(angle, radius);
+    });
+
+    const axisLines = risks.map((risk, index) => {
+      const angle = index * angleStep;
+      const endPoint = getPoint(angle, maxRadius);
+      const IconComponent = RiskIcons[risk];
+      const labelPoint = getPoint(angle, maxRadius + 25);
+      
+      return (
+        <g key={risk}>
+          <line
+            x1={center}
+            y1={center}
+            x2={endPoint.x}
+            y2={endPoint.y}
+            stroke="#d1d5db"
+            strokeWidth="1"
+          />
+          <g transform={`translate(${labelPoint.x - 8}, ${labelPoint.y - 8})`}>
+            <circle cx="8" cy="8" r="10" fill="white" stroke="#e5e7eb"/>
+            <g transform="translate(2, 2)">
+              <IconComponent size="w-4 h-4" />
+            </g>
+          </g>
+          <text
+            x={labelPoint.x}
+            y={labelPoint.y + 25}
+            textAnchor="middle"
+            className="text-xs font-medium fill-gray-700"
           >
-            <ChevronLeft size={20} />
-            Back to Menu
-          </button>
-          <h2 className="text-2xl font-bold">{title}</h2>
-        </div>
+            {riskLabels[risk]}
+          </text>
+        </g>
+      );
+    });
 
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Progress</span>
-            <span className="text-sm text-gray-600">{answeredCount}/{totalQuestions}</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(answeredCount / totalQuestions) * 100}%` }}
+    return (
+      <div className="flex justify-center">
+        <svg width="300" height="320" className="overflow-visible">
+          {gridLines}
+          {axisLines}
+          <polygon
+            points={dataPoints.map(p => `${p.x},${p.y}`).join(' ')}
+            fill="rgba(59, 130, 246, 0.3)"
+            stroke="#3b82f6"
+            strokeWidth="2"
+          />
+          {dataPoints.map((point, index) => (
+            <circle
+              key={index}
+              cx={point.x}
+              cy={point.y}
+              r="3"
+              fill="#3b82f6"
             />
-          </div>
-        </div>
-
-        {!showResults ? (
-          <div className="space-y-4">
-            {questions.map((question) => (
-              <div key={question.id} className="bg-white p-6 rounded-lg shadow-sm border">
-                <p className="text-lg mb-4">{question.text}</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <button
-                    onClick={() => handleAnswer(question.id, 'yes', methodology)}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
-                      answers[question.id] === 'yes'
-                        ? 'bg-green-500 text-white shadow-lg'
-                        : 'bg-gray-100 text-gray-700 hover:bg-green-100 border border-gray-200'
-                    }`}
-                  >
-                    <CheckCircle size={18} />
-                    <span className="text-sm">Yes</span>
-                  </button>
-                  <button
-                    onClick={() => handleAnswer(question.id, 'partial', methodology)}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
-                      answers[question.id] === 'partial'
-                        ? 'bg-yellow-500 text-white shadow-lg'
-                        : 'bg-gray-100 text-gray-700 hover:bg-yellow-100 border border-gray-200'
-                    }`}
-                  >
-                    <div className="w-4 h-4 border-2 border-current rounded-full flex items-center justify-center">
-                      <div className="w-2 h-2 bg-current rounded-full"></div>
-                    </div>
-                    <span className="text-sm">Partial</span>
-                  </button>
-                  <button
-                    onClick={() => handleAnswer(question.id, 'no', methodology)}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
-                      answers[question.id] === 'no'
-                        ? 'bg-red-500 text-white shadow-lg'
-                        : 'bg-gray-100 text-gray-700 hover:bg-red-100 border border-gray-200'
-                    }`}
-                  >
-                    <XCircle size={18} />
-                    <span className="text-sm">No</span>
-                  </button>
-                  <button
-                    onClick={() => handleAnswer(question.id, 'na', methodology)}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
-                      answers[question.id] === 'na'
-                        ? 'bg-gray-500 text-white shadow-lg'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
-                    }`}
-                  >
-                    <div className="w-4 h-4 border-2 border-current rounded-full flex items-center justify-center">
-                      <div className="w-1 h-1 bg-current rounded-full"></div>
-                    </div>
-                    <span className="text-sm">N/A</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <>
-            {methodology === 'bradley' && renderBradleyResults()}
-            {methodology === 'hearts' && renderHeartsResults()}
-            {methodology === 'maturity' && renderMaturityResults()}
-            
-            <div className="text-center mt-8">
-              <button
-                onClick={() => setCurrentScreen('home')}
-                className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-              >
-                Take Another Assessment
-              </button>
-            </div>
-          </>
-        )}
+          ))}
+          {[20, 40, 60, 80, 100].map(percentage => (
+            <text
+              key={percentage}
+              x={center + 5}
+              y={center - (percentage / 100) * maxRadius}
+              className="text-xs fill-gray-500"
+            >
+              {percentage}%
+            </text>
+          ))}
+        </svg>
       </div>
     );
   };
-
-  if (currentScreen === 'bradley') {
-    return renderAssessment(bradleyQuestions, bradleyAnswers, 'bradley', 'DuPont Bradley Curve Assessment');
-  }
-
-  if (currentScreen === 'hearts') {
-    return renderAssessment(heartsQuestions, heartsAnswers, 'hearts', 'Hearts and Minds Assessment');
-  }
-
-  if (currentScreen === 'maturity') {
-    return renderAssessment(maturityQuestions, maturityAnswers, 'maturity', 'Safety Culture Maturity Assessment');
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <div className="flex justify-center mb-4">
-            <Shield className="h-16 w-16 text-blue-600" />
-          </div>
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Avaliação de Cultura de Segurança</h1>
-          <p className="text-lg text-gray-600">Escolha sua metodologia de avaliação preferida para avaliar a maturidade da cultura de segurança da sua organização</p>
+    <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6">
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <AlertTriangle className="w-8 h-8" />
+            Sistema de Gestão de Riscos
+          </h1>
+          <p className="mt-2 opacity-90">Checklist integrado e monitoramento visual</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Bradley Curve Card */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group"
-               onClick={() => setCurrentScreen('bradley')}>
-            <div className="bg-gradient-to-r from-red-500 to-green-500 h-2"></div>
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-blue-100 p-3 rounded-full mr-4">
-                  <svg width="32" height="32" viewBox="0 0 32 32" className="text-blue-600">
-                    <defs>
-                      <linearGradient id="bradleyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#dc2626" />
-                        <stop offset="33%" stopColor="#ea580c" />
-                        <stop offset="66%" stopColor="#ca8a04" />
-                        <stop offset="100%" stopColor="#16a34a" />
-                      </linearGradient>
-                    </defs>
-                    <path d="M 4 24 Q 8 16 16 12 Q 24 8 28 4" stroke="url(#bradleyGradient)" strokeWidth="3" fill="none" strokeLinecap="round"/>
-                    <path d="M 26 6 L 28 4 L 26 2" stroke="url(#bradleyGradient)" strokeWidth="2" fill="none" strokeLinecap="round"/>
-                    <polygon points="16,2 20,8 16,14 12,8" fill="currentColor" opacity="0.3"/>
-                    <circle cx="6" cy="22" r="1.5" fill="#dc2626"/>
-                    <circle cx="12" cy="16" r="1.5" fill="#ea580c"/>
-                    <circle cx="20" cy="10" r="1.5" fill="#ca8a04"/>
-                    <circle cx="26" cy="6" r="1.5" fill="#16a34a"/>
-                  </svg>
+        <div className="flex border-b overflow-x-auto">
+          {Object.keys(riskLabels).map((risk) => {
+            const IconComponent = RiskIcons[risk];
+            return (
+              <button
+                key={risk}
+                onClick={() => setActiveTab(risk)}
+                className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                  activeTab === risk
+                    ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
+              >
+                <div style={{width: '16px', height: '16px'}}>
+                  <IconComponent size="w-4 h-4" />
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">DuPont Bradley Curve</h3>
-                  <p className="text-sm text-gray-500">Est. 1995</p>
-                </div>
-              </div>
-              <p className="text-gray-600 mb-4">
-                Avalie a jornada da sua organização desde a cultura reativa até a interdependente baseada no modelo clássico da DuPont.
-              </p>
-              <div className="flex justify-between text-xs text-gray-500 mb-4">
-                <span>Reativo → Dependente → Independente → Interdependente</span>
-              </div>
-              <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium group-hover:bg-blue-700 transition-colors">
-                Iniciar Avaliação
+                <span className="hidden sm:inline">{riskLabels[risk]}</span>
               </button>
-            </div>
-          </div>
-
-          {/* Hearts and Minds Card */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group"
-               onClick={() => setCurrentScreen('hearts')}>
-            <div className="bg-gradient-to-r from-red-500 via-orange-500 via-yellow-500 to-green-500 h-2"></div>
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-red-100 p-3 rounded-full mr-4">
-                  <svg width="32" height="32" viewBox="0 0 32 32" className="text-red-600">
-                    <defs>
-                      <linearGradient id="heartsGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-                        <stop offset="0%" stopColor="#dc2626" />
-                        <stop offset="33%" stopColor="#ea580c" />
-                        <stop offset="66%" stopColor="#ca8a04" />
-                        <stop offset="100%" stopColor="#16a34a" />
-                      </linearGradient>
-                    </defs>
-                    <path d="M16,28 C16,28 5,19 5,12 C5,8 8,5 12,5 C14,5 16,7 16,7 C16,7 18,5 20,5 C24,5 27,8 27,12 C27,19 16,28 16,28 Z" 
-                          fill="currentColor" opacity="0.7"/>
-                    <path d="M16,4 C20,4 23,7 23,11 C23,12 22,13 21,13 C22,14 22,15 21,16 C22,17 22,18 21,19 C20,20 18,20 16,20 C14,20 12,20 11,19 C10,18 10,17 11,16 C10,15 10,14 11,13 C10,13 9,12 9,11 C9,7 12,4 16,4 Z" 
-                          fill="url(#heartsGradient)" opacity="0.8"/>
-                    <rect x="2" y="26" width="6" height="1" fill="currentColor" opacity="0.5"/>
-                    <rect x="4" y="22" width="6" height="1" fill="currentColor" opacity="0.6"/>
-                    <rect x="6" y="18" width="6" height="1" fill="currentColor" opacity="0.7"/>
-                    <rect x="8" y="14" width="6" height="1" fill="currentColor" opacity="0.8"/>
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">Hearts and Minds</h3>
-                  <p className="text-sm text-gray-500">Shell/Energy Institute</p>
-                </div>
-              </div>
-              <p className="text-gray-600 mb-4">
-                Avalie a cultura de segurança através do modelo Hearts and Minds, focando nas atitudes e motivações por trás dos comportamentos.
-              </p>
-              <div className="flex justify-between text-xs text-gray-500 mb-4">
-                <span>Reativo → Calculativo → Proativo → Generativo</span>
-              </div>
-              <button className="w-full bg-red-600 text-white py-3 rounded-lg font-medium group-hover:bg-red-700 transition-colors">
-                Iniciar Avaliação
-              </button>
-            </div>
-          </div>
-
-          {/* Culture Maturity Model Card */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group"
-               onClick={() => setCurrentScreen('maturity')}>
-            <div className="bg-gradient-to-r from-gray-400 to-green-600 h-2"></div>
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-green-100 p-3 rounded-full mr-4">
-                  <svg width="32" height="32" viewBox="0 0 32 32" className="text-green-600">
-                    <defs>
-                      <linearGradient id="maturityGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-                        <stop offset="0%" stopColor="#6b7280" />
-                        <stop offset="25%" stopColor="#f97316" />
-                        <stop offset="50%" stopColor="#eab308" />
-                        <stop offset="75%" stopColor="#3b82f6" />
-                        <stop offset="100%" stopColor="#16a34a" />
-                      </linearGradient>
-                    </defs>
-                    <rect x="6" y="24" width="20" height="2" fill="#6b7280"/>
-                    <rect x="8" y="20" width="16" height="2" fill="#f97316"/>
-                    <rect x="10" y="16" width="12" height="2" fill="#eab308"/>
-                    <rect x="12" y="12" width="8" height="2" fill="#3b82f6"/>
-                    <rect x="14" y="8" width="4" height="2" fill="#16a34a"/>
-                    
-                    <rect x="4" y="6" width="2" height="20" fill="currentColor" opacity="0.3"/>
-                    <rect x="26" y="6" width="2" height="20" fill="currentColor" opacity="0.3"/>
-                    
-                    <polygon points="16,2 18,6 14,6" fill="currentColor"/>
-                    <circle cx="16" cy="4" r="2" fill="none" stroke="currentColor" strokeWidth="1"/>
-                    
-                    <circle cx="7" cy="25" r="1" fill="white"/>
-                    <circle cx="9" cy="21" r="1" fill="white"/>
-                    <circle cx="11" cy="17" r="1" fill="white"/>
-                    <circle cx="13" cy="13" r="1" fill="white"/>
-                    <circle cx="15" cy="9" r="1" fill="white"/>
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">Modelo de Maturidade</h3>
-                  <p className="text-sm text-gray-500">Hudson-Parker</p>
-                </div>
-              </div>
-              <p className="text-gray-600 mb-4">
-                Avaliação abrangente da maturidade da cultura de segurança através de múltiplas dimensões organizacionais e capacidades.
-              </p>
-              <div className="flex justify-between text-xs text-gray-500 mb-4">
-                <span>Patológico → Emergente → Desenvolvendo → Gerenciando → Melhorando</span>
-              </div>
-              <button className="w-full bg-green-600 text-white py-3 rounded-lg font-medium group-hover:bg-green-700 transition-colors">
-                Iniciar Avaliação
-              </button>
-            </div>
-          </div>
+            );
+          })}
+          <button
+            onClick={() => setActiveTab('checklist')}
+            className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'checklist'
+                ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+            }`}
+          >
+            📋 Checklist
+          </button>
+          <button
+            onClick={() => setActiveTab('radar')}
+            className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'radar'
+                ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+            }`}
+          >
+            📊 Radar
+          </button>
+          <button
+            onClick={() => setActiveTab('insights')}
+            className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'insights'
+                ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+            }`}
+          >
+            💡 Insights
+          </button>
         </div>
 
-        <div className="mt-12 bg-white rounded-xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Sobre Estas Metodologias</h2>
-          <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-600">
-            <div className="border-l-4 border-blue-500 pl-4">
-              <div className="flex items-center mb-2">
-                <svg width="20" height="20" viewBox="0 0 32 32" className="text-blue-600 mr-2">
-                  <path d="M 4 24 Q 8 16 16 12 Q 24 8 28 4" stroke="currentColor" strokeWidth="2" fill="none"/>
-                  <polygon points="16,2 20,8 16,14 12,8" fill="currentColor" opacity="0.3"/>
-                </svg>
-                <h4 className="font-semibold text-gray-800">DuPont Bradley Curve</h4>
+        <div className="p-6">
+          {activeTab === 'checklist' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Checklist Completo de Segurança</h2>
+                <button
+                  onClick={() => setActiveTab('radar')}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
+                >
+                  📊 Ver Radar de Riscos
+                </button>
               </div>
-              <p className="mb-2"><strong>Origem:</strong> Desenvolvida por Berlin Bradley (DuPont) em 1995</p>
-              <p><strong>Foco:</strong> Progressão da conformidade reativa para cultura de segurança interdependente proativa. Baseado na evolução de comportamentos e motivações de segurança.</p>
-            </div>
-            <div className="border-l-4 border-red-500 pl-4">
-              <div className="flex items-center mb-2">
-                <svg width="20" height="20" viewBox="0 0 32 32" className="text-red-600 mr-2">
-                  <path d="M16,28 C16,28 5,19 5,12 C5,8 8,5 12,5 C14,5 16,7 16,7 C16,7 18,5 20,5 C24,5 27,8 27,12 C27,19 16,28 16,28 Z" fill="currentColor" opacity="0.5"/>
-                  <circle cx="16" cy="10" r="6" fill="none" stroke="currentColor" strokeWidth="1"/>
-                </svg>
-                <h4 className="font-semibold text-gray-800">Hearts and Minds</h4>
-              </div>
-              <p className="mb-2"><strong>Origem:</strong> Shell/Energy Institute - Universidades de Leiden, Manchester e Aberdeen</p>
-              <p><strong>Foco:</strong> Compreender as atitudes e motivações subjacentes que impulsionam comportamentos de segurança. "Conquistar corações e mentes" para trabalhar com segurança.</p>
-            </div>
-            <div className="border-l-4 border-green-500 pl-4">
-              <div className="flex items-center mb-2">
-                <svg width="20" height="20" viewBox="0 0 32 32" className="text-green-600 mr-2">
-                  <rect x="6" y="20" width="20" height="2" fill="currentColor" opacity="0.3"/>
-                  <rect x="8" y="16" width="16" height="2" fill="currentColor" opacity="0.5"/>
-                  <rect x="10" y="12" width="12" height="2" fill="currentColor" opacity="0.7"/>
-                  <rect x="12" y="8" width="8" height="2" fill="currentColor" opacity="0.9"/>
-                  <polygon points="16,2 18,6 14,6" fill="currentColor"/>
-                </svg>
-                <h4 className="font-semibold text-gray-800">Modelo de Maturidade</h4>
-              </div>
-              <p className="mb-2"><strong>Origem:</strong> Hudson-Parker, baseado no trabalho de Westrum e desenvolvido pelo Keil Centre</p>
-              <p><strong>Foco:</strong> Avaliação abrangente da maturidade da cultura de segurança através de múltiplas dimensões organizacionais e capacidades sistêmicas.</p>
-            </div>
-          </div>
-          
-          <div className="mt-8 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg">
-            <h4 className="font-semibold text-gray-800 mb-2">💡 Dica Profissional:</h4>
-            <p className="text-sm text-gray-700">
-              Cada metodologia oferece uma perspectiva única da cultura de segurança. O DuPont Bradley Curve foca na evolução comportamental, 
-              Hearts and Minds nas motivações psicológicas, e o Modelo de Maturidade na capacidade sistêmica organizacional. 
-              Para uma avaliação completa, considere usar múltiplas metodologias.
-            </p>
-          import React, { useState } from 'react';
-import { ChevronLeft, Shield, CheckCircle, XCircle } from 'lucide-react';
-
-const SafetyCultureApp = () => {
-  const [currentScreen, setCurrentScreen] = useState('home');
-  const [bradleyAnswers, setBradleyAnswers] = useState({});
-  const [heartsAnswers, setHeartsAnswers] = useState({});
-  const [maturityAnswers, setMaturityAnswers] = useState({});
-
-  // Bradley Curve Assessment Questions
-  const bradleyQuestions = [
-    { id: 1, text: "Management actively demonstrates safety leadership through visible actions", category: "leadership" },
-    { id: 2, text: "Employees follow safety rules because they want to, not just because they have to", category: "motivation" },
-    { id: 3, text: "Safety incidents are reported without fear of blame or punishment", category: "culture" },
-    { id: 4, text: "Teams proactively identify and address safety risks together", category: "teamwork" },
-    { id: 5, text: "Safety procedures are regularly reviewed and improved based on employee input", category: "improvement" },
-    { id: 6, text: "Employees feel empowered to stop work when they see unsafe conditions", category: "empowerment" },
-    { id: 7, text: "Safety performance is measured beyond just injury rates", category: "metrics" },
-    { id: 8, text: "There's open communication about safety concerns at all levels", category: "communication" },
-    { id: 9, text: "Employees actively look out for each other's safety", category: "care" },
-    { id: 10, text: "Safety is integrated into all business decisions and processes", category: "integration" }
-  ];
-
-  // Hearts and Minds Questions
-  const heartsQuestions = [
-    { id: 1, text: "People see safety rules as bureaucratic obstacles to getting work done", category: "reactive" },
-    { id: 2, text: "Safety is driven primarily by compliance and avoiding penalties", category: "reactive" },
-    { id: 3, text: "Employees calculate risks and benefits before following safety procedures", category: "calculative" },
-    { id: 4, text: "Safety decisions are based on cost-benefit analysis", category: "calculative" },
-    { id: 5, text: "People follow safety rules because they believe it's the right thing to do", category: "proactive" },
-    { id: 6, text: "Safety values are shared and practiced consistently across the organization", category: "proactive" },
-    { id: 7, text: "Safety is 'just how we do business' - it's part of our DNA", category: "generative" },
-    { id: 8, text: "The organization continuously seeks new ways to improve safety", category: "generative" },
-    { id: 9, text: "Safety thinking is applied to all aspects of the business", category: "generative" },
-    { id: 10, text: "People feel personal responsibility for overall organizational safety", category: "generative" }
-  ];
-
-  // Safety Culture Maturity Model Questions
-  const maturityQuestions = [
-    { id: 1, text: "Leadership provides adequate resources for safety programs", category: "leadership" },
-    { id: 2, text: "There are clear safety roles and responsibilities at all levels", category: "organization" },
-    { id: 3, text: "Safety training is comprehensive and regularly updated", category: "competence" },
-    { id: 4, text: "Risk assessments are thorough and regularly reviewed", category: "risk" },
-    { id: 5, text: "There's effective two-way safety communication", category: "communication" },
-    { id: 6, text: "Safety performance is regularly monitored and analyzed", category: "monitoring" },
-    { id: 7, text: "Lessons learned from incidents are effectively shared", category: "learning" },
-    { id: 8, text: "Safety management systems are well-integrated", category: "systems" },
-    { id: 9, text: "Contractors and suppliers meet our safety standards", category: "partnerships" },
-    { id: 10, text: "Safety culture assessment is conducted regularly", category: "assessment" }
-  ];
-
-  const calculateBradleyScore = () => {
-    const totalAnswers = Object.keys(bradleyAnswers).length;
-    if (totalAnswers === 0) return 0;
-    
-    let totalScore = 0;
-    let validAnswers = 0;
-    
-    Object.values(bradleyAnswers).forEach(answer => {
-      if (answer !== 'na') {
-        validAnswers++;
-        if (answer === 'yes') totalScore += 100;
-        else if (answer === 'partial') totalScore += 50;
-      }
-    });
-    
-    return validAnswers > 0 ? totalScore / validAnswers : 0;
-  };
-
-  const getBradleyLevel = (score) => {
-    if (score >= 80) return { level: 'Interdependent', color: 'bg-green-500', stage: 4 };
-    if (score >= 60) return { level: 'Independent', color: 'bg-yellow-500', stage: 3 };
-    if (score >= 40) return { level: 'Dependent', color: 'bg-orange-500', stage: 2 };
-    return { level: 'Reactive', color: 'bg-red-500', stage: 1 };
-  };
-
-  const calculateHeartsScore = () => {
-    const answers = Object.values(heartsAnswers);
-    if (answers.length === 0) return { reactive: 0, calculative: 0, proactive: 0, generative: 0 };
-    
-    const categories = { reactive: 0, calculative: 0, proactive: 0, generative: 0 };
-    
-    heartsQuestions.forEach(q => {
-      const answer = heartsAnswers[q.id];
-      if (answer === 'yes') {
-        categories[q.category] += 100;
-      } else if (answer === 'partial') {
-        categories[q.category] += 50;
-      }
-    });
-    
-    return categories;
-  };
-
-  const getHeartsLevel = () => {
-    const scores = calculateHeartsScore();
-    const maxScore = Math.max(...Object.values(scores));
-    const dominantLevel = Object.keys(scores).find(key => scores[key] === maxScore);
-    return dominantLevel || 'reactive';
-  };
-
-  const calculateMaturityScore = () => {
-    const totalAnswers = Object.keys(maturityAnswers).length;
-    if (totalAnswers === 0) return 0;
-    
-    let totalScore = 0;
-    let validAnswers = 0;
-    
-    Object.values(maturityAnswers).forEach(answer => {
-      if (answer !== 'na') {
-        validAnswers++;
-        if (answer === 'yes') totalScore += 100;
-        else if (answer === 'partial') totalScore += 50;
-      }
-    });
-    
-    return validAnswers > 0 ? totalScore / validAnswers : 0;
-  };
-
-  const getMaturityLevel = (score) => {
-    if (score >= 80) return { level: 'Continually Improving', color: 'bg-green-600' };
-    if (score >= 60) return { level: 'Managing', color: 'bg-blue-500' };
-    if (score >= 40) return { level: 'Developing', color: 'bg-yellow-500' };
-    if (score >= 20) return { level: 'Emerging', color: 'bg-orange-500' };
-    return { level: 'Pathological', color: 'bg-red-500' };
-  };
-
-  const handleAnswer = (questionId, answer, methodology) => {
-    if (methodology === 'bradley') {
-      setBradleyAnswers(prev => ({ ...prev, [questionId]: answer }));
-    } else if (methodology === 'hearts') {
-      setHeartsAnswers(prev => ({ ...prev, [questionId]: answer }));
-    } else if (methodology === 'maturity') {
-      setMaturityAnswers(prev => ({ ...prev, [questionId]: answer }));
-    }
-  };
-
-  const renderBradleyResults = () => {
-    const score = calculateBradleyScore();
-    const level = getBradleyLevel(score);
-    
-    return (
-      <div className="space-y-6">
-        <h3 className="text-3xl font-bold text-center mb-8 text-gray-800 bg-yellow-400 py-2">DuPont Bradley Curve</h3>
-        
-        <div className="bg-white p-8 rounded-xl shadow-xl">
-          {/* Bradley Curve Visual - Exact replica */}
-          <div className="relative bg-gray-50 p-6 rounded-lg mb-8">
-            {/* Injury Rate Y-axis */}
-            <div className="absolute left-2 top-1/2 transform -rotate-90 origin-left text-sm font-bold text-red-600">
-              INJURY RATE
-            </div>
-            
-            {/* Arrow shape container */}
-            <div className="relative ml-8">
-              <div className="flex items-stretch h-48">
-                {/* Reactive Section */}
-                <div className={`relative flex-1 ${level.stage === 1 ? 'ring-4 ring-yellow-400 ring-opacity-80' : ''}`}>
-                  <div className="bg-red-600 h-full flex flex-col justify-between p-3 text-white text-xs relative"
-                       style={{clipPath: 'polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%)'}}>
-                    <div className="text-center">
-                      <div className="bg-white text-red-600 px-1 py-0.5 rounded text-xs font-bold mb-1 inline-block transform -skew-x-12">
-                        NATURAL INSTINCTS
+              {Object.entries(checklistData).map(([riskType, data]) => {
+                const IconComponent = RiskIcons[riskType];
+                const isExpanded = expandedSections[riskType];
+                const completionPercentage = getCompletionPercentage(riskType);
+                
+                return (
+                  <div key={riskType} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleSection(riskType)}
+                      className="w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 flex items-center justify-between transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div style={{width: '16px', height: '16px'}}>
+                          <IconComponent size="w-4 h-4" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {riskLabels[riskType]}
+                        </h3>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          completionPercentage === 100 
+                            ? 'bg-green-100 text-green-800' 
+                            : completionPercentage > 50 
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {completionPercentage}% completo
+                        </span>
                       </div>
-                      <div className="text-sm font-bold mb-1">Reactive</div>
-                      <div className="text-xs leading-tight">
-                        • People hurt by behaviour<br/>
-                        • Safety is a priority<br/>
-                        • Focus on injury rates<br/>
-                        • Compliance based<br/>
-                        • Reactive programs
+                      {isExpanded ? <ChevronUp /> : <ChevronDown />}
+                    </button>
+                    
+                    {isExpanded && (
+                      <div className="p-6 bg-white">
+                        <div className="space-y-3">
+                          {data.items.map((item) => (
+                            <div key={item.id} className="p-4 bg-white rounded-lg border border-gray-200">
+                              <div className="flex flex-col gap-3">
+                                <span className="text-gray-700 font-medium">{item.text}</span>
+                                <div className="flex gap-2 flex-wrap">
+                                  {[
+                                    { value: 'sim', label: 'Sim', color: 'bg-green-100 text-green-800 border-green-300' },
+                                    { value: 'nao', label: 'Não', color: 'bg-red-100 text-red-800 border-red-300' },
+                                    { value: 'na', label: 'N/A', color: 'bg-gray-100 text-gray-800 border-gray-300' },
+                                    { value: 'parcial', label: 'Parcial', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' }
+                                  ].map((option) => (
+                                    <button
+                                      key={option.value}
+                                      onClick={() => handleStatusChange(riskType, item.id, option.value)}
+                                      className={`px-3 py-1 rounded-lg border-2 font-medium transition-all ${
+                                        item.status === option.value
+                                          ? option.color + ' ring-2 ring-offset-1'
+                                          : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                                      }`}
+                                    >
+                                      {option.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {activeTab === 'radar' && (
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">Monitoramento Visual de Riscos</h2>
+              <RadarChart />
+              <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
+                {Object.entries(checklistData).map(([riskType, data]) => {
+                  const IconComponent = RiskIcons[riskType];
+                  const percentage = getCompletionPercentage(riskType);
+                  
+                  return (
+                    <div key={riskType} className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div style={{width: '16px', height: '16px'}}>
+                          <IconComponent size="w-4 h-4" />
+                        </div>
+                        <span className="font-medium text-sm">{riskLabels[riskType]}</span>
+                      </div>
+                      <div className="text-2xl font-bold text-blue-600">{percentage}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'insights' && (
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">💡 Insights e Soluções</h2>
+              <div className="space-y-6">
+                {getAllInsights().map((riskInsight) => {
+                  const IconComponent = RiskIcons[riskInsight.risk];
+                  return (
+                    <div key={riskInsight.risk} className="bg-amber-50 border border-amber-200 rounded-lg p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div style={{width: '16px', height: '16px'}}>
+                          <IconComponent size="w-4 h-4" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-800">{riskInsight.label}</h3>
+                        <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
+                          {riskInsight.insights.length} item(s) para melhorar
+                        </span>
+                      </div>
+                      <div className="space-y-4">
+                        {riskInsight.insights.map((insight, index) => (
+                          <div key={index} className="bg-white p-4 rounded-lg border border-amber-100">
+                            <div className="flex items-start gap-3">
+                              <div className="w-2 h-2 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                                  {insight.status === 'nao' && <span className="text-red-600">❌</span>}
+                                  {insight.status === 'parcial' && <span className="text-yellow-600">⚠️</span>}
+                                  {insight.problem}
+                                </h4>
+                                <p className="text-gray-700 bg-green-50 p-3 rounded border-l-4 border-green-400">
+                                  <span className="font-medium text-green-800">💡 Solução:</span> {insight.solution}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    <div className="text-center text-xs italic">
-                      "I follow rules because I have to"
+                  );
+                })}
+                {getAllInsights().length === 0 && (
+                  <div className="text-center py-12 bg-green-50 rounded-lg border border-green-200">
+                    <div className="text-6xl mb-4">✅</div>
+                    <h3 className="text-xl font-semibold text-green-800 mb-2">Parabéns!</h3>
+                    <p className="text-green-700">Todos os itens de segurança foram verificados. Seu ambiente está protegido!</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {Object.keys(riskLabels).includes(activeTab) && (
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div style={{width: '20px', height: '20px'}}>
+                  {React.createElement(RiskIcons[activeTab], {size: 'w-5 h-5'})}
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800">{riskLabels[activeTab]}</h2>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  getCompletionPercentage(activeTab) === 100 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {getCompletionPercentage(activeTab)}% completo
+                </span>
+              </div>
+              
+              <div className="space-y-3">
+                {checklistData[activeTab].items.map((item) => (
+                  <div key={item.id} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex flex-col gap-3">
+                      <span className="text-gray-700 font-medium">{item.text}</span>
+                      <div className="flex gap-2 flex-wrap">
+                        {[
+                          { value: 'sim', label: 'Sim', color: 'bg-green-100 text-green-800 border-green-300' },
+                          { value: 'nao', label: 'Não', color: 'bg-red-100 text-red-800 border-red-300' },
+                          { value: 'na', label: 'N/A', color: 'bg-gray-100 text-gray-800 border-gray-300' },
+                          { value: 'parcial', label: 'Parcial', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' }
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => handleStatusChange(activeTab, item.id, option.value)}
+                            className={`px-3 py-1 rounded-lg border-2 font-medium transition-all ${
+                              item.status === option.value
+                                ? option.color + ' ring-2 ring-offset-1'
+                                : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  {level.stage === 1 && (
-                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold">
-                      YOUR LEVEL
-                    </div>
-                  )}
-                </div>
-
-                {/* Dependent Section */}
-                <div className={`relative flex-1 ${level.stage === 2 ? 'ring-4 ring-yellow-400 ring-opacity-80' : ''}`}>
-                  <div className="bg-orange-500 h-full flex flex-col justify-between p-3 text-white text-xs relative"
-                       style={{clipPath: 'polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%)'}}>
-                    <div className="text-center">
-                      <div className="bg-white text-orange-500 px-1 py-0.5 rounded text-xs font-bold mb-1 inline-block transform -skew-x-12">
-                        SUPERVISION
-                      </div>
-                      <div className="text-sm font-bold mb-1">Dependent</div>
-                      <div className="text-xs leading-tight">
-                        • Supervisor engagement<br/>
-                        • Rules & procedures<br/>
-                        • Training programs<br/>
-                        • Behavior modification<br/>
-                        • Measurement systems
-                      </div>
-                    </div>
-                    <div className="text-center text-xs italic">
-                      "I follow rules because I have to"
-                    </div>
-                  </div>
-                  {level.stage === 2 && (
-                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold">
-                      YOUR LEVEL
-                    </div>
-                  )}
-                </div>
-
-                {/* Independent Section */}
-                <div className={`relative flex-1 ${level.stage === 3 ? 'ring-4 ring-yellow-400 ring-opacity-80' : ''}`}>
-                  <div className="bg-yellow-600 h-full flex flex-col justify-between p-3 text-white text-xs relative"
-                       style={{clipPath: 'polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%)'}}>
-                    <div className="text-center">
-                      <div className="bg-white text-yellow-600 px-1 py-0.5 rounded text-xs font-bold mb-1 inline-block transform -skew-x-12">
-                        SELF
-                      </div>
-                      <div className="text-sm font-bold mb-1">Independent</div>
-                      <div className="text-xs leading-tight">
-                        • Personal responsibility<br/>
-                        • Self-directed behavior<br/>
-                        • Individual commitment<br/>
-                        • Intrinsic motivation<br/>
-                        • Personal ownership
-                      </div>
-                    </div>
-                    <div className="text-center text-xs italic">
-                      "I follow rules because I want to"
-                    </div>
-                  </div>
-                  {level.stage === 3 && (
-                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold">
-                      YOUR LEVEL
-                    </div>
-                  )}
-                </div>
-
-                {/* Interdependent Section */}
-                <div className={`relative flex-1 ${level.stage === 4 ? 'ring-4 ring-yellow-400 ring-opacity-80' : ''}`}>
-                  <div className="bg-green-600 h-full flex flex-col justify-between p-3 text-white text-xs relative"
-                       style={{clipPath: 'polygon(10% 0, 100% 0, 90% 50%, 100% 100%, 10% 100%, 0 50%)'}}>
-                    <div className="text-center">
-                      <div className="bg-white text-green-600 px-1 py-0.5 rounded text-xs font-bold mb-1 inline-block transform -skew-x-12">
-                        TEAMS
-                      </div>
-                      <div className="text-sm font-bold mb-1">Interdependent</div>
-                      <div className="text-xs leading-tight">
-                        • Team responsibility<br/>
-                        • Care for others<br/>
-                        • Collective commitment<br/>
-                        • Mutual accountability<br/>
-                        • Helping behaviors
-                      </div>
-                    </div>
-                    <div className="text-center text-xs italic">
-                      "I follow rules because I want to"
-                    </div>
-                  </div>
-                  {level.stage === 4 && (
-                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold">
-                      YOUR LEVEL
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Motivation labels - exactly like original */}
-              <div className="flex justify-between mt-4 text-center">
-                <div className="w-1/2 text-red-600">
-                  <div className="font-bold text-sm">External Motivation</div>
-                  <div className="font-semibold text-xs">Compliance</div>
-                  <div className="text-xs">Rules, Procedures, Protocols</div>
-                </div>
-                <div className="w-1/2 text-blue-600">
-                  <div className="font-bold text-sm">Internal Motivation</div>
-                  <div className="font-semibold text-xs">Commitment</div>
-                  <div className="text-xs">Self Leadership, Role Modelling,<br/>Influencing & Engagement</div>
-                </div>
+                ))}
               </div>
             </div>
-          </div>
-
-          {/* Results Summary */}
-          <div className="text-center mb-6">
-            <div className={`inline-block px-8 py-4 rounded-xl text-white font-bold text-xl ${level.color}`}>
-              {level.level} Level
-            </div>
-            <p className="text-xl mt-3 text-gray-700">Assessment Score: {score.toFixed(1)}%</p>
-            <div className="mt-2 text-sm text-gray-600">
-              {Object.values(bradleyAnswers).filter(a => a === 'na').length > 0 && (
-                <p>* {Object.values(bradleyAnswers).filter(a => a === 'na').length} questions marked as Not Applicable were excluded from scoring</p>
-              )}
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg">
-            <h4 className="font-bold text-lg mb-3 text-gray-800">Development Recommendations:</h4>
-            {level.stage === 1 && (
-              <div>
-                <p className="mb-2"><strong>Focus Area:</strong> Building foundational safety systems and management commitment</p>
-                <p><strong>Key Actions:</strong> Establish clear safety policies, improve supervisor training, implement basic measurement systems, and ensure regulatory compliance.</p>
-              </div>
-            )}
-            {level.stage === 2 && (
-              <div>
-                <p className="mb-2"><strong>Focus Area:</strong> Developing systematic safety management and employee engagement</p>
-                <p><strong>Key Actions:</strong> Enhance training programs, implement behavior-based safety initiatives, improve safety communications, and strengthen supervisor-employee relationships.</p>
-              </div>
-            )}
-            {level.stage === 3 && (
-              <div>
-                <p className="mb-2"><strong>Focus Area:</strong> Fostering personal responsibility and self-directed safety behaviors</p>
-                <p><strong>Key Actions:</strong> Develop safety leadership skills, encourage employee ownership, implement self-assessments, and promote intrinsic motivation for safety.</p>
-              </div>
-            )}
-            {level.stage === 4 && (
-              <div>
-                <p className="mb-2"><strong>Focus Area:</strong> Maintaining excellence through team collaboration and continuous improvement</p>
-                <p><strong>Key Actions:</strong> Foster peer-to-peer safety coaching, implement team-based safety initiatives, share best practices, and drive innovation in safety practices.</p>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
-  const renderHeartsResults = () => {
-    const scores = calculateHeartsScore();
-    const dominantLevel = getHeartsLevel();
-    
-    return (
-      <div className="space-y-6">
-        <h3 className="text-3xl font-bold text-center mb-8 text-gray-800">Hearts and Minds Safety Culture</h3>
-        
-        <div className="bg-black p-8 rounded-xl shadow-xl text-white relative overflow-hidden">
-          {/* Background diagonal lines like original */}
-          <div className="absolute inset-0 opacity-10">
-            <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <line x1="0" y1="100" x2="20" y2="0" stroke="white" strokeWidth="0.5"/>
-              <line x1="10" y1="100" x2="30" y2="0" stroke="white" strokeWidth="0.5"/>
-              <line x1="20" y1="100" x2="40" y2="0" stroke="white" strokeWidth="0.5"/>
-              <line x1="30" y1="100" x2="50" y2="0" stroke="white" strokeWidth="0.5"/>
-              <line x1="40" y1="100" x2="60" y2="0" stroke="white" strokeWidth="0.5"/>
-            </svg>
-          </div>
+export default RiskManagementApp;
 
-          {/* Main diagonal arrow like original */}
-          <div className="absolute left-12 top-8 bottom-8 w-0.5 bg-white transform rotate-12 origin-bottom opacity-30"></div>
-          
-          {/* Consciousness and Responsibility arrows */}
-          <div className="absolute left-8 top-12 text-xs text-gray-300 transform -rotate-45 origin-center">
-            <div className="whitespace-nowrap">
-              <div>Aumento da</div>
-              <div>consciência</div>
-            </div>
-          </div>
-          <div className="absolute right-8 bottom-12 text-xs text-gray-300 transform rotate-45 origin-center">
-            <div className="whitespace-nowrap">
-              <div>Aumento da</div>
-              <div>confiança e</div>
-              <div>responsabilidade</div>
-            </div>
-          </div>
-
-          {/* Culture levels - exactly like original with highlighting */}
-          <div className="relative z-10 space-y-3 pt-4 pb-4">
-            {/* Generativo */}
-            <div className={`relative ${dominantLevel === 'generative' ? 'ring-4 ring-yellow-400' : ''}`}>
-              <div className="bg-green-600 p-4 rounded-lg relative">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h4 className="text-lg font-bold text-white">GENERATIVO</h4>
-                    <p className="text-sm text-green-100 italic">SMS é como fazemos negócios aqui</p>
-                    <p className="text-xs text-green-100 mt-1">A gestão da segurança e saúde é uma parte integral de tudo que fazemos</p>
-                  </div>
-                  <div className="text-3xl font-bold text-white ml-4">{scores.generative}</div>
-                </div>
-                {dominantLevel === 'generative' && (
-                  <div className="absolute -right-12 top-1/2 transform -translate-y-1/2">
-                    <div className="bg-yellow-400 text-black px-3 py-1 rounded-r-lg text-sm font-bold whitespace-nowrap">
-                      SUA CULTURA
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Proativo */}
-            <div className={`relative ${dominantLevel === 'proactive' ? 'ring-4 ring-yellow-400' : ''}`}>
-              <div className="bg-yellow-500 p-4 rounded-lg relative">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h4 className="text-lg font-bold text-black">PROATIVO</h4>
-                    <p className="text-sm text-yellow-800 italic">A melhoria é valores conduzida</p>
-                    <p className="text-xs text-yellow-800 mt-1">Tentamos antecipar os problemas que iremos enfrentar</p>
-                  </div>
-                  <div className="text-3xl font-bold text-black ml-4">{scores.proactive}</div>
-                </div>
-                {dominantLevel === 'proactive' && (
-                  <div className="absolute -right-12 top-1/2 transform -translate-y-1/2">
-                    <div className="bg-yellow-400 text-black px-3 py-1 rounded-r-lg text-sm font-bold whitespace-nowrap">
-                      SUA CULTURA
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Calculativo */}
-            <div className={`relative ${dominantLevel === 'calculative' ? 'ring-4 ring-yellow-400' : ''}`}>
-              <div className="bg-orange-500
+export default RiskManagementApp;
