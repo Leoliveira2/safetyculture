@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
-
 // Ícones personalizados para cada tipo de risco com cores específicas
 const RiskIcons = {
   eletricidade: ({ size = 'w-6 h-6' } = {}) => (
@@ -712,7 +709,5 @@ const RiskManagementApp = () => {
     </div>
   );
 };
-
-export default RiskManagementApp;
 
 export default RiskManagementApp;
